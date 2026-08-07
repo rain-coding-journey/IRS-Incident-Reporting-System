@@ -1204,31 +1204,7 @@
                     return;
                 }
 
-                // If a user record does not exist (e.g., migrating from another device), create it automatically.
-                // NOTE: Do not auto-create accounts when the password matches the staff credential.
-                if (!account && normalizedUser && !isStaffUsername(normalizedUser) && !isStaffPassword(pass)) {
-                    users[normalizedKey] = {
-                        password: pass,
-                        role: 'student',
-                        createdAt: new Date().toISOString(),
-                        lastLoginAt: new Date().toISOString(),
-                        lastGeo: null,
-                    };
-                    saveUsers(users);
-
-                    if (rememberMeCheckbox.checked) {
-                        setRememberedUsername(normalizedUser);
-                    } else {
-                        clearRememberedUsername();
-                    }
-
-                    statusEl.textContent = 'Account created and logged in!';
-                    hideTransfer();
-                    loginBtn.classList.remove('loading');
-                    loginSuccess('student', normalizedUser);
-                    return;
-                }
-
+                // Require a stored student account for login. Do not create accounts automatically here.
                 remainingAttempts -= 1;
                 statusEl.textContent = '';
                 hideTransfer();
