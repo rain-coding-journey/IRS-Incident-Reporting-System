@@ -1,0 +1,1922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Reporting System</title>
+    <link rel="stylesheet" href="animation.css">
+    <style>
+        :root {
+            --bg-start: #0b1a2b;
+            --bg-end: #0f223a;
+            --card-bg: rgba(255, 255, 255, 0.84);
+            --card-border: rgba(255, 255, 255, 0.22);
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #64748b;
+            --secondary-hover: #475569;
+            --text: #0f172a;
+            --muted: #475569;
+            --shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+            --radius: 18px;
+            --transition: 220ms ease;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            color: var(--text);
+            background: radial-gradient(circle at top, rgba(92, 96, 255, 0.35), transparent 55%), linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            background-attachment: fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .container {
+            width: min(540px, 100%);
+            padding: 2.25rem 2rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .report-card {
+            padding: 1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--text);
+            margin-bottom: 0.75rem;
+        }
+
+        body.dark .report-card {
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(15, 20, 32, 0.72);
+        }
+
+        .app-logo {
+            max-width: 140px;
+            height: auto;
+            margin: 0 auto 1.25rem;
+            display: block;
+            border-radius: 12px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+        }
+
+        h2 {
+            margin: 0 0 1.25rem;
+            font-size: 1.75rem;
+            letter-spacing: -0.02em;
+        }
+
+        p {
+            color: var(--muted);
+            margin: 0 0 1rem;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 12px;
+            margin: 8px 0 14px;
+            border: 1px solid rgba(15, 23, 42, 0.18);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.75);
+            font-size: 1rem;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: rgba(79, 70, 229, 0.9);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+        }
+
+        input[type="checkbox"],
+        input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .label-text {
+            display: block;
+            text-align: left;
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-top: 1rem;
+            margin-bottom: 0.35rem;
+        }
+
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 12px 18px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 12px 18px rgba(0, 0, 0, 0.18);
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 16px 22px rgba(0, 0, 0, 0.22);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 10px 14px rgba(0, 0, 0, 0.18);
+        }
+
+        button.secondary {
+            background: var(--secondary);
+            color: #ffffff;
+        }
+
+        button.secondary:hover {
+            background: var(--secondary-hover);
+        }
+
+        .status-text {
+            color: #0f5132;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+        }
+
+        .error-text {
+            color: #b91c1c;
+            font-size: 0.95rem;
+            margin-top: 0.25rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .screen {
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 260ms ease, transform 260ms ease;
+        }
+
+        .screen.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.05rem;
+            z-index: 1000;
+            transition: background var(--transition), transform var(--transition);
+        }
+
+        .theme-toggle:hover,
+        .theme-toggle:focus-visible {
+            background: rgba(255, 255, 255, 0.23);
+            transform: translateY(-1px);
+            outline: none;
+        }
+
+        .transfer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 14, 27, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 180ms ease, visibility 180ms ease;
+            z-index: 1200;
+        }
+
+        .transfer-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .transfer-content {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            background: rgba(18, 25, 45, 0.9);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+            color: white;
+            font-weight: 600;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255, 255, 255, 0.35);
+            border-top-color: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            animation: spin 0.85s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        body.dark {
+            --bg-start: #0b1220;
+            --bg-end: #03060d;
+            --card-bg: rgba(15, 20, 32, 0.88);
+            --card-border: rgba(255, 255, 255, 0.16);
+            --text: rgba(255, 255, 255, 0.92);
+            --muted: rgba(255, 255, 255, 0.68);
+            --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        textarea:focus-visible {
+            outline: 3px solid rgba(79, 70, 229, 0.55);
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1.75rem 1.5rem;
+                border-radius: 14px;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            button {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+
+            input,
+            textarea {
+                padding: 10px;
+            }
+        }
+
+        @media (min-width: 900px) {
+            .container {
+                max-width: 760px;
+                padding: 2.5rem 2.5rem;
+            }
+
+            .dashboard-actions {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.9rem;
+            }
+
+            .dashboard-actions button {
+                min-height: 52px;
+            }
+
+            /* Staff admin panel (file cabinet style) */
+            .staff-panel {
+                border: 1px solid rgba(0, 0, 0, 0.22);
+                border-radius: 14px;
+                padding: 1.25rem;
+                background: rgba(255, 255, 255, 0.92);
+                margin-top: 1rem;
+                text-align: left;
+            }
+
+            .staff-panel .cabinet-header {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+                margin-bottom: 1rem;
+            }
+
+            .staff-panel .cabinet-title {
+                font-size: 1.1rem;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+            }
+
+            .staff-panel .cabinet-subtitle {
+                color: var(--muted);
+                font-size: 0.9rem;
+            }
+
+            .staff-panel .cabinet-filters {
+                display: grid;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .staff-panel .cabinet-filter-row {
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            .staff-panel input[type="text"] {
+                background: rgba(255, 255, 255, 0.85);
+            }
+
+            .staff-panel .cabinet-drawers {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .cabinet-drawer {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 1rem;
+                border-radius: 14px;
+                border: 1px solid rgba(15, 23, 42, 0.18);
+                background: rgba(255, 255, 255, 0.8);
+                color: var(--text);
+                cursor: pointer;
+                text-align: left;
+                transition: transform var(--transition), box-shadow var(--transition);
+            }
+
+            body.dark .cabinet-drawer {
+                background: rgba(15, 20, 32, 0.72);
+            }
+
+            .cabinet-drawer:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+            }
+
+            .cabinet-drawer .drawer-title {
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+            }
+
+            .cabinet-drawer .drawer-count {
+                font-size: 2rem;
+                font-weight: 700;
+                color: var(--primary);
+            }
+
+            .cabinet-actions {
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+                margin-top: 0.5rem;
+            }
+
+            .bulk-actions {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.75rem;
+                border-radius: 14px;
+                border: 1px solid rgba(15, 23, 42, 0.18);
+                background: rgba(255, 255, 255, 0.85);
+                margin-bottom: 1rem;
+            }
+
+            .bulk-actions span {
+                font-weight: 600;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">🌙</button>
+
+    <!-- 1. LOGIN / SIGNUP SCREEN -->
+    <div id="login-screen" class="container screen active">
+        <img src="data:image/png;base64,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" alt="University Logo" class="app-logo" onerror="this.onerror=null;this.src='https://via.placeholder.com/140x80?text=University+Logo';">
+        <h2 id="screenTitle">Sign In</h2>
+
+        <form id="loginForm">
+            <div class="label-text">Username</div>
+            <input type="text" id="username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Enter username" required>
+            
+            <div class="label-text">Password</div>
+            <input type="password" id="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Enter password" required>
+
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; margin-top: 0.25rem;">
+                <input type="checkbox" id="rememberMe">
+                Remember me
+            </label>
+
+            <div id="loginStatus" class="status-text" aria-live="polite"></div>
+            <div id="loginError" class="error-text"></div>
+
+            <button type="submit">Login</button>
+            <button type="button" class="secondary" id="forgotPasswordBtn">Forgot password?</button>
+            <button type="button" class="secondary" id="showSignupBtn">Create account</button>
+        </form>
+
+        <form id="resetForm" class="hidden">
+            <div class="label-text">Username</div>
+            <input type="text" id="resetUsername" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Enter your username" required>
+
+            <div class="label-text">Gmail</div>
+            <input type="email" id="resetEmail" autocomplete="email" placeholder="Enter your Gmail" required>
+
+            <div class="label-text">New Password</div>
+            <input type="password" id="resetPassword" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Enter new password" required>
+
+            <div class="label-text">Confirm New Password</div>
+            <input type="password" id="resetPasswordConfirm" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Re-enter new password" required>
+
+            <div id="resetError" class="error-text"></div>
+            <div id="resetInfo" class="status-text" style="margin-top: 0.5rem;"></div>
+
+            <button type="submit">Reset Password</button>
+            <button type="button" class="secondary" id="cancelResetBtn">Back to Sign In</button>
+        </form>
+
+        <form id="signupForm" class="hidden">
+            <div class="label-text">Choose a Username</div>
+            <input type="text" id="signupUsername" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Enter username" required>
+
+            <div class="label-text">Gmail (required for password recovery)</div>
+            <input type="email" id="signupEmail" autocomplete="email" placeholder="Enter your Gmail" required>
+
+            <div class="label-text">Choose a Password</div>
+            <input type="password" id="signupPassword" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Enter password" required>
+
+            <div class="label-text">Confirm Password</div>
+            <input type="password" id="signupPasswordConfirm" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Re-enter password" required>
+
+            <div id="signupError" style="color: #d9534f; margin-top: 0.25rem; margin-bottom: 0.5rem; font-size: 0.9rem;"></div>
+
+            <button type="submit">Create Account</button>
+            <button type="button" class="secondary" id="showLoginBtn">Back to Sign In</button>
+        </form>
+    </div>
+
+    <!-- 2. DASHBOARD INTERFACE -->
+    <div id="dashboard-screen" class="container screen main-bg hidden">
+        <img src="data:image/png;base64,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" alt="University Logo" class="app-logo">
+        <h2 id="welcome-title">Welcome, Staff Member</h2>
+        <p id="dashboard-instructions">Please select an action below.</p>
+
+        <div id="studentActions" class="dashboard-actions">
+            <button id="dashboardActionBtn" onclick="dashboardAction()">📝 File Incident Report</button>
+            <button id="dashboardActionBtn2" class="secondary hidden" onclick="dashboardActionSecondary()">📄 My Reports</button>
+        </div>
+
+        <div id="staffPanel" class="staff-panel hidden">
+            <div class="cabinet-header">
+                <div class="cabinet-title">File Cabinet</div>
+                <div class="cabinet-subtitle">Quickly view and manage incident logs.</div>
+            </div>
+
+            <div class="cabinet-filters">
+                <input id="cabinetSearch" type="text" placeholder="Search by student ID, reporter, or details" oninput="onCabinetFilterChange()" autocomplete="off">
+                <div class="cabinet-filter-row">
+                    <input id="cabinetStudentFilter" type="text" placeholder="Filter by student ID" oninput="setStaffFilter(this.value)" autocomplete="off">
+                    <button type="button" class="secondary" onclick="exportReports()">Export JSON</button>
+                </div>
+            </div>
+
+            <div class="cabinet-drawers">
+                <button type="button" class="cabinet-drawer" data-status="pending" onclick="setLogsTab('pending'); showLogs();">
+                    <div class="drawer-title">Pending</div>
+                    <div class="drawer-count" id="cabinetPendingCount">0</div>
+                </button>
+                <button type="button" class="cabinet-drawer" data-status="taking_action" onclick="setLogsTab('taking_action'); showLogs();">
+                    <div class="drawer-title">Taking Action</div>
+                    <div class="drawer-count" id="cabinetActionCount">0</div>
+                </button>
+                <button type="button" class="cabinet-drawer" data-status="finished" onclick="setLogsTab('finished'); showLogs();">
+                    <div class="drawer-title">Finished</div>
+                    <div class="drawer-count" id="cabinetFinishedCount">0</div>
+                </button>
+            </div>
+
+            <div class="cabinet-actions">
+                <button type="button" class="secondary" onclick="showLogs()">Open Selected</button>
+                <button type="button" class="secondary" onclick="refreshCabinet()">Refresh</button>
+                <button type="button" class="secondary" onclick="showAccounts()">User Accounts</button>
+            </div>
+        </div>
+
+        <div class="dashboard-actions" style="margin-top: 0.75rem;">
+            <button type="button" class="secondary" onclick="showSettings()">⚙️ Profile</button>
+        </div>
+        <button class="secondary" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- 3. LOGS VIEW (Staff only) -->
+    <div id="logs-screen" class="container screen main-bg hidden">
+        <h2>Incident Logs</h2>
+        <p>Below are the reports submitted by students.</p>
+
+        <div id="bulkActionsBar" class="bulk-actions hidden">
+            <span id="bulkSelectedCount">0</span> selected
+            <button type="button" class="secondary" onclick="bulkChangeStatus('taking_action')">Mark Taking Action</button>
+            <button type="button" class="secondary" onclick="bulkChangeStatus('finished')">Mark Finished</button>
+            <button type="button" class="secondary" style="background: rgba(185, 28, 28, 0.9);" onclick="bulkDeleteSelected()">Delete</button>
+            <button type="button" class="secondary" onclick="clearBulkSelection()">Clear</button>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+            <button type="button" id="tabPending" class="secondary" onclick="setLogsTab('pending')">Pending</button>
+            <button type="button" id="tabTakingAction" class="secondary" onclick="setLogsTab('taking_action')">Taking Action</button>
+            <button type="button" id="tabFinished" class="secondary" onclick="setLogsTab('finished')">Finished</button>
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Filter by Student ID (staff only):</label>
+            <input id="staffFilter" type="text" placeholder="e.g. AUJRC-12345-6789" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;" oninput="setStaffFilter(this.value)">
+        </div>
+        <div id="logsCount" style="margin-bottom: 0.75rem; font-weight: 600;"></div>
+        <div id="logsList" style="text-align: left;"></div>
+        <button type="button" class="secondary" onclick="showDashboard()">Back to Dashboard</button>
+    </div>
+
+    <!-- 4. USER ACCOUNTS (Staff only) -->
+    <div id="accounts-screen" class="container screen main-bg hidden">
+        <h2>User Accounts</h2>
+        <p>View account details and last known GeoIP (from last login).</p>
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+            <input id="accountsSearch" type="text" placeholder="Search by username, email, or role" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid rgba(15, 23, 42, 0.2);" oninput="renderAccounts();">
+            <select id="accountsRoleFilter" style="padding: 8px; border-radius: 6px; border: 1px solid rgba(15, 23, 42, 0.2);" onchange="renderAccounts();">
+                <option value="">All roles</option>
+                <option value="student">Student</option>
+                <option value="staff">Staff</option>
+            </select>
+            <button type="button" class="secondary" onclick="renderAccounts()">Refresh</button>
+        </div>
+
+        <div id="accountsList" style="text-align: left;"></div>
+
+        <button type="button" class="secondary" onclick="showDashboard()">Back to Dashboard</button>
+    </div>
+
+    <!-- 5. STUDENT REPORTS (Student only) -->
+    <div id="myreports-screen" class="container screen main-bg hidden">
+        <h2>My Reports</h2>
+        <p>Reports you have submitted.</p>
+        <div id="myReportsCount" style="margin-bottom: 0.75rem; font-weight: 600;"></div>
+        <div id="myReportsList" style="text-align: left;"></div>
+        <button type="button" class="secondary" onclick="showDashboard()">Back to Dashboard</button>
+    </div>
+
+    <!-- 5. PROFILE / SETTINGS -->
+    <div id="settings-screen" class="container screen main-bg hidden">
+        <h2>Profile Settings</h2>
+        <p>Update your account info and preferences.</p>
+        <form id="settingsForm">
+            <div class="label-text">Username</div>
+            <input type="text" id="settingsUsername" readonly>
+
+            <div class="label-text">Role</div>
+            <input type="text" id="settingsRole" readonly>
+
+            <div class="label-text">Profile Photo</div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; justify-content: center;">
+                <div id="settingsAvatar" style="width: 64px; height: 64px; border-radius: 999px; background: rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                    <span style="font-size: 0.85rem; color: rgba(0,0,0,0.45);">No Photo</span>
+                </div>
+                <div style="flex: 1; text-align: left;">
+                    <input type="file" id="settingsAvatarFile" accept="image/*" style="width: 100%;" />
+                    <button type="button" class="secondary" style="margin-top: 0.5rem; width: 100%;" onclick="clearAvatar()">Remove Photo</button>
+                </div>
+            </div>
+
+            <div class="label-text">Gmail (for recovery)</div>
+            <input type="email" id="settingsEmail" placeholder="Enter your Gmail">
+
+            <div class="label-text">Current Password</div>
+            <input type="password" id="settingsCurrentPassword" placeholder="Current password">
+
+            <div class="label-text">New Password</div>
+            <input type="password" id="settingsNewPassword" placeholder="Leave blank to keep current">
+
+            <div class="label-text">Theme</div>
+            <select id="settingsTheme">
+                <option value="system">System (auto)</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+
+            <div id="settingsStatus" class="status-text"></div>
+            <div id="settingsError" class="error-text"></div>
+
+            <button type="submit">Save Changes</button>
+            <button type="button" class="secondary" onclick="showDashboard()">Back to Dashboard</button>
+
+            <hr style="margin: 1.75rem 0; border-color: rgba(0,0,0,0.12);">
+            <button type="button" class="secondary" style="background: rgba(185, 28, 28, 0.9);" onclick="deleteAccount()">Delete Account</button>
+        </form>
+    </div>
+
+    <!-- 6. INCIDENT REPORT FORM -->
+    <div id="report-screen" class="container screen main-bg hidden">
+        <h2>Incident Report</h2>
+        <form id="reportForm">
+            <div class="label-text">Date (mm/dd/yyyy)</div>
+            <input type="date" id="reportDate" required>
+
+            <div class="label-text">Time</div>
+            <input type="time" id="reportTime" required>
+
+            <div class="label-text">Student ID (e.g., AUJRC-99999-9999)</div>
+            <input type="text" id="studentId" placeholder="AUJRC-00000-0000" required>
+
+            <div class="label-text">Incident Details (Box 1)</div>
+            <textarea id="incidentDetails" rows="3" placeholder="Describe the initial event..." required></textarea>
+
+            <div class="label-text">Upload Photo Proof (optional, max 50MB total)</div>
+            <input type="file" id="reportPhoto" accept="image/*" multiple>
+
+            <button type="submit">Submit Report</button>
+            <button type="button" class="secondary" onclick="showDashboard()">Back to Dashboard</button>
+        </form>
+    </div>
+
+    <script>
+        // DOM Elements
+        const loginScreen = document.getElementById('login-screen');
+        const dashboardScreen = document.getElementById('dashboard-screen');
+        const reportScreen = document.getElementById('report-screen');
+        const accountsScreen = document.getElementById('accounts-screen');
+
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const reportForm = document.getElementById('reportForm');
+
+        const loginError = document.getElementById('loginError');
+        const signupError = document.getElementById('signupError');
+        const screenTitle = document.getElementById('screenTitle');
+        const welcomeTitle = document.getElementById('welcome-title');
+
+        const showSignupBtn = document.getElementById('showSignupBtn');
+        const showLoginBtn = document.getElementById('showLoginBtn');
+        const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+        const resetForm = document.getElementById('resetForm');
+        const resetError = document.getElementById('resetError');
+        const resetInfo = document.getElementById('resetInfo');
+        const cancelResetBtn = document.getElementById('cancelResetBtn');
+        const rememberMeCheckbox = document.getElementById('rememberMe');
+
+        const dashboardActionBtn = document.getElementById('dashboardActionBtn');
+        const dashboardActionBtn2 = document.getElementById('dashboardActionBtn2');
+        const dashboardInstructions = document.getElementById('dashboard-instructions');
+
+        const logsScreen = document.getElementById('logs-screen');
+        const myReportsScreen = document.getElementById('myreports-screen');
+        const myReportsCount = document.getElementById('myReportsCount');
+        const myReportsList = document.getElementById('myReportsList');
+        const settingsScreen = document.getElementById('settings-screen');
+        const settingsForm = document.getElementById('settingsForm');
+        const themeToggleBtn = document.getElementById('themeToggle');
+
+        const ALL_SCREENS = [
+            loginScreen,
+            dashboardScreen,
+            reportScreen,
+            logsScreen,
+            myReportsScreen,
+            accountsScreen,
+            settingsScreen,
+        ];
+
+        function setActiveScreen(screen) {
+            ALL_SCREENS.forEach((s) => {
+                const isActive = s === screen;
+                s.classList.toggle('hidden', !isActive);
+
+                if (isActive) {
+                    // Start from the hidden state so that the transition can play.
+                    s.classList.remove('active');
+                    requestAnimationFrame(() => s.classList.add('active'));
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        }
+
+        function applyTheme(theme) {
+            const isDark = theme === 'dark';
+            document.body.classList.toggle('dark', isDark);
+
+            if (themeToggleBtn) {
+                themeToggleBtn.textContent = isDark ? '☀️' : '🌙';
+                themeToggleBtn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+                themeToggleBtn.title = themeToggleBtn.getAttribute('aria-label');
+            }
+        }
+
+        function initTheme() {
+            const stored = localStorage.getItem('incidentTheme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = stored || (prefersDark ? 'dark' : 'light');
+            applyTheme(theme);
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.classList.contains('dark');
+            const next = isDark ? 'light' : 'dark';
+            localStorage.setItem('incidentTheme', next);
+            applyTheme(next);
+        }
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', toggleTheme);
+        }
+
+        // Staff login credentials (case-insensitive username)
+        const STAFF_CREDENTIALS = {
+            'aujrc-osa': 'AUJRC-FACULTY',
+            'aujrc-prefect': 'AUJRC-FACULTY',
+        };
+
+        function isStaffUsername(name) {
+            return Boolean(STAFF_CREDENTIALS[name.toLowerCase()]);
+        }
+
+        function isValidStaffPassword(name, pass) {
+            return STAFF_CREDENTIALS[name.toLowerCase()] === pass;
+        }
+
+        function isStaffPassword(pass) {
+            return Object.values(STAFF_CREDENTIALS).some((p) => p === pass);
+        }
+
+        // Track login attempts
+        let remainingAttempts = 3;
+        let currentUser = null;
+        let currentRole = null;
+        let currentLogTab = 'pending';
+        let editingReportId = null;
+        let staffFilterStudentId = '';
+        let cabinetSearchQuery = '';
+        let selectedReportIds = new Set();
+
+        function loadUsers() {
+            const raw = localStorage.getItem('incidentUsers');
+            return raw ? JSON.parse(raw) : {};
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem('incidentUsers', JSON.stringify(users));
+        }
+
+        function loadReports() {
+            const raw = localStorage.getItem('incidentReports');
+            return raw ? JSON.parse(raw) : [];
+        }
+
+        function saveReports(reports) {
+            localStorage.setItem('incidentReports', JSON.stringify(reports));
+        }
+
+        // Obtain basic geolocation info (IP-based) for report attribution.
+        // This uses a free public API. It can fail when running from file:// or when the API blocks / rate-limits.
+        async function fetchGeoInfo() {
+            // Local file URLs block fetch calls in many browsers, so skip early.
+            if (window.location.protocol === 'file:') {
+                console.warn('GeoIP lookup skipped because page is running from file://');
+                return null;
+            }
+
+            const endpoints = [
+                'https://ipapi.co/json/',
+                'https://ipinfo.io/json',
+            ];
+
+            for (const url of endpoints) {
+                try {
+                    const resp = await fetch(url);
+                    if (!resp.ok) continue;
+                    const data = await resp.json();
+                    return {
+                        ip: data.ip || data.ip_address || null,
+                        city: data.city || null,
+                        region: data.region || data.region_name || null,
+                        country: data.country_name || data.country || null,
+                        org: data.org || data.org_name || null,
+                        timezone: data.timezone || null,
+                    };
+                } catch (err) {
+                    // Try the next endpoint
+                }
+            }
+
+            console.warn('GeoIP lookup failed (API unreachable or blocked).');
+            return null;
+        }
+
+        function renderReportCard(r) {
+            const createdAt = new Date(r.createdAt).toLocaleString();
+
+            const selectCheckbox = currentRole === 'staff'
+                ? `
+                    <label style="display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--muted);">
+                        <input type="checkbox" data-report-id="${r.id}" onchange="onReportSelectionChange(this)">
+                        <span>Select</span>
+                    </label>
+                  `
+                : '';
+
+            const photoSection = (r.photos && r.photos.length)
+                ? `
+                    <div style="margin-top: 0.75rem;">
+                        <strong>Photo Proof:</strong>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                            ${r.photos
+                                .map((p, idx) => `
+                                    <div style="width: 160px;">
+                                        <div style="border: 1px solid #ccc; border-radius: 4px; overflow: hidden;">
+                                            <img src="${p.data}" style="width: 100%; height: 120px; object-fit: cover;" alt="Photo ${idx + 1}">
+                                        </div>
+                                        <a href="${p.data}" download="${p.name || 'report-photo'}" style="display: inline-block; margin-top: 0.25rem; font-size: 0.85rem; color: #007bff; text-decoration: none;">Download</a>
+                                    </div>
+                                `)
+                                .join('')}
+                        </div>
+                    </div>
+                  `
+                : '';
+
+            const geoSection = (currentRole === 'staff')
+                ? `
+                    <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #333;">
+                        <strong>Location (IP-based):</strong>
+                        <div style="margin-top: 0.25rem;">
+                            ${r.geo ? `${r.geo.city ? `${r.geo.city}, ` : ''}${r.geo.region ? `${r.geo.region}, ` : ''}${r.geo.country || ''}` : 'Unavailable (network/API blocked or running from file://)'}
+                            ${r.geo && r.geo.org ? `<br><span style="font-weight: 400;">${r.geo.org}</span>` : ''}
+                            ${r.geo && r.geo.ip ? `<div style="margin-top: 0.35rem; font-size: 0.85rem; color: #555;">IP: ${r.geo.ip}</div>` : ''}
+                        </div>
+                    </div>
+                  `
+                : '';
+
+            const statusBadge = `
+                <div style="margin-top: 0.5rem; font-weight: 600;">
+                    Status: <span style="text-transform: capitalize;">${r.status.replace('_', ' ')}</span>
+                </div>
+            `;
+
+            const actionControls = (currentRole === 'staff')
+                ? `
+                    <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        ${r.status === 'pending' ? `<button type="button" style="flex: 1;" onclick="setReportStatus('${r.id}', 'taking_action')">Take Action</button>` : ''}
+                        ${r.status === 'taking_action' ? `<button type="button" style="flex: 1;" onclick="setReportStatus('${r.id}', 'finished')">Mark Finished</button>` : ''}
+                        ${r.status === 'finished' ? `<button type="button" style="flex: 1;" onclick="deleteReport('${r.id}')">Delete</button>` : ''}
+                    </div>
+                  `
+                : '';
+
+            return `
+                <div class="report-card">
+                    <div><strong>Submitted By:</strong> ${r.createdBy}</div>
+                    <div><strong>Submitted:</strong> ${createdAt}</div>
+                    <div><strong>Student ID:</strong> ${r.studentId}</div>
+                    <div><strong>Date/Time:</strong> ${r.date} ${r.time}</div>
+                    <div><strong>Details:</strong> ${r.details}</div>
+                    ${geoSection}
+                    ${statusBadge}
+                    ${photoSection}
+                    ${actionControls}
+                </div>
+            `;
+        }
+
+        function setWelcome(role) {
+            welcomeTitle.textContent = role === 'staff' ? 'Welcome, Staff Member' : 'Welcome, Student';
+        }
+
+        function updateDashboardForRole() {
+            const staffPanel = document.getElementById('staffPanel');
+            const studentActions = document.getElementById('studentActions');
+
+            if (currentRole === 'staff') {
+                staffPanel.classList.remove('hidden');
+                studentActions.classList.add('hidden');
+
+                dashboardActionBtn.textContent = '📋 Open File Cabinet';
+                dashboardActionBtn2.textContent = '📤 Export Logs';
+                dashboardActionBtn2.classList.remove('hidden');
+                dashboardInstructions.textContent = 'Use the file cabinet to review reports and take action.';
+
+                refreshCabinet();
+            } else {
+                staffPanel.classList.add('hidden');
+                studentActions.classList.remove('hidden');
+
+                dashboardActionBtn.textContent = '📝 File Incident Report';
+                dashboardActionBtn2.textContent = '📄 My Reports';
+                dashboardActionBtn2.classList.remove('hidden');
+                dashboardInstructions.textContent = 'Submit a new incident report or view past reports.';
+            }
+        }
+
+        function dashboardAction() {
+            if (currentRole === 'staff') {
+                showLogs();
+            } else {
+                showReportForm();
+            }
+        }
+
+        function dashboardActionSecondary() {
+            if (currentRole === 'staff') {
+                exportReports();
+            } else {
+                showMyReports();
+            }
+        }
+
+        function exportReports() {
+            const reports = loadReports();
+            const blob = new Blob([JSON.stringify(reports, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'incident-reports.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function lockLogin() {
+            loginError.textContent = 'Too many failed login attempts. Try again later.';
+            document.getElementById('username').disabled = true;
+            document.getElementById('password').disabled = true;
+            loginForm.querySelector('button[type="submit"]').disabled = true;
+        }
+
+        function getRememberedUsername() {
+            return localStorage.getItem('rememberedUsername') || '';
+        }
+
+        function setRememberedUsername(username) {
+            localStorage.setItem('rememberedUsername', username);
+        }
+
+        function clearRememberedUsername() {
+            localStorage.removeItem('rememberedUsername');
+        }
+
+        // Transfer/transition overlay helpers
+        function showTransfer(message = 'Switching screens…') {
+            const overlay = document.getElementById('transferOverlay');
+            if (!overlay) return;
+            const text = overlay.querySelector('.transfer-text');
+            if (text) text.textContent = message;
+            overlay.classList.add('visible');
+            overlay.setAttribute('aria-hidden', 'false');
+        }
+
+        function hideTransfer() {
+            const overlay = document.getElementById('transferOverlay');
+            if (!overlay) return;
+            overlay.classList.remove('visible');
+            overlay.setAttribute('aria-hidden', 'true');
+        }
+
+        function transitionTo(action, message = 'Switching screens…') {
+            showTransfer(message);
+            requestAnimationFrame(() => {
+                // Give the browser a chance to render the overlay before performing work
+                setTimeout(() => {
+                    action();
+                    setTimeout(hideTransfer, 180);
+                }, 120);
+            });
+        }
+
+        function showLoginScreen() {
+            transitionTo(() => {
+                currentUser = null;
+                currentRole = null;
+                currentLogTab = 'pending';
+                signupError.textContent = '';
+                loginError.textContent = '';
+                resetError.textContent = '';
+                screenTitle.textContent = 'Sign In';
+                loginForm.reset();
+                signupForm.reset();
+                resetForm.reset();
+
+                const remembered = getRememberedUsername();
+                if (remembered) {
+                    document.getElementById('username').value = remembered;
+                    rememberMeCheckbox.checked = true;
+                } else {
+                    rememberMeCheckbox.checked = false;
+                }
+
+                document.body.classList.add('login-bg');
+
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                resetForm.classList.add('hidden');
+
+                setActiveScreen(loginScreen);
+
+                document.getElementById('username').disabled = false;
+                document.getElementById('password').disabled = false;
+                loginForm.querySelector('button[type="submit"]').disabled = false;
+            }, 'Opening sign in screen…');
+        }
+
+        function showSignupScreen() {
+            transitionTo(() => {
+                document.body.classList.add('login-bg');
+                signupError.textContent = '';
+                loginError.textContent = '';
+                resetError.textContent = '';
+                screenTitle.textContent = 'Create an Account';
+                loginForm.reset();
+                signupForm.reset();
+                resetForm.reset();
+                signupForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                resetForm.classList.add('hidden');
+
+                setActiveScreen(loginScreen);
+            }, 'Opening signup screen…');
+        }
+
+        function showResetScreen() {
+            transitionTo(() => {
+                document.body.classList.add('login-bg');
+                resetError.textContent = '';
+                resetInfo.textContent = '';
+                screenTitle.textContent = 'Reset Password';
+                loginForm.reset();
+                signupForm.reset();
+                resetForm.reset();
+                resetForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                signupForm.classList.add('hidden');
+
+                setActiveScreen(loginScreen);
+            }, 'Opening password reset…');
+        }
+
+        async function recordLoginGeo(username) {
+            const users = loadUsers();
+            const key = username.toLowerCase();
+            const account = users[key];
+            if (!account) return;
+
+            try {
+                const geo = await fetchGeoInfo();
+                if (geo) {
+                    account.lastGeo = geo;
+                    account.lastLoginAt = new Date().toISOString();
+                    users[key] = account;
+                    saveUsers(users);
+                }
+            } catch {
+                // ignore geo failures
+            }
+        }
+
+        async function loginSuccess(role, user) {
+            remainingAttempts = 3;
+            loginError.textContent = '';
+            signupError.textContent = '';
+            currentRole = role;
+            currentUser = user;
+            currentLogTab = 'pending';
+            setWelcome(role);
+
+            // Ensure the login background styling is removed once logged in
+            document.body.classList.remove('login-bg');
+
+            updateDashboardForRole();
+            setActiveScreen(dashboardScreen);
+
+            // Record geo data for the account (staff not stored locally)
+            if (role !== 'staff') {
+                recordLoginGeo(user);
+            }
+        }
+
+        // 1. Handle Login
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Stop page refresh
+
+            // Lock out if too many failed attempts
+            if (remainingAttempts <= 0) {
+                lockLogin();
+                return;
+            }
+
+            const loginBtn = loginForm.querySelector('button[type="submit"]');
+            const statusEl = document.getElementById('loginStatus');
+
+            // Show nice animated feedback
+            loginBtn.classList.add('loading');
+            showTransfer('Signing in…');
+
+            statusEl.textContent = 'Signing in…';
+            loginError.textContent = '';
+            document.getElementById('username').disabled = true;
+            document.getElementById('password').disabled = true;
+            loginBtn.disabled = true;
+
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+
+            // Normalize the username for consistent lookup (mobile keyboards may alter case)
+            const normalizedUser = user.trim();
+            const normalizedKey = normalizedUser.toLowerCase();
+
+            setTimeout(() => {
+                // Staff login (case-insensitive username)
+                if (isValidStaffPassword(normalizedUser, pass)) {
+                    if (rememberMeCheckbox.checked) {
+                        setRememberedUsername(normalizedUser);
+                    } else {
+                        clearRememberedUsername();
+                    }
+
+                    statusEl.textContent = 'Successfully Logged In!';
+                    hideTransfer();
+                    loginBtn.classList.remove('loading');
+                    loginSuccess('staff', normalizedUser);
+                    return;
+                }
+
+                // Student login
+                const users = loadUsers();
+                const account = users[normalizedKey];
+                // Prevent staff password from being used for student accounts.
+                if (account && account.password === pass && !isStaffPassword(pass)) {
+                    if (rememberMeCheckbox.checked) {
+                        setRememberedUsername(normalizedUser);
+                    } else {
+                        clearRememberedUsername();
+                    }
+
+                    statusEl.textContent = 'Successfully Logged In!';
+                    hideTransfer();
+                    loginBtn.classList.remove('loading');
+                    loginSuccess('student', normalizedUser);
+                    return;
+                }
+
+                // If a user record does not exist (e.g., migrating from another device), create it automatically.
+                // NOTE: Do not auto-create accounts when the password matches the staff credential.
+                if (!account && normalizedUser && !isStaffUsername(normalizedUser) && !isStaffPassword(pass)) {
+                    users[normalizedKey] = {
+                        password: pass,
+                        role: 'student',
+                        createdAt: new Date().toISOString(),
+                        lastLoginAt: new Date().toISOString(),
+                        lastGeo: null,
+                    };
+                    saveUsers(users);
+
+                    if (rememberMeCheckbox.checked) {
+                        setRememberedUsername(normalizedUser);
+                    } else {
+                        clearRememberedUsername();
+                    }
+
+                    statusEl.textContent = 'Account created and logged in!';
+                    hideTransfer();
+                    loginBtn.classList.remove('loading');
+                    loginSuccess('student', normalizedUser);
+                    return;
+                }
+
+                remainingAttempts -= 1;
+                statusEl.textContent = '';
+                hideTransfer();
+                loginBtn.classList.remove('loading');
+
+                if (remainingAttempts > 0) {
+                    loginError.textContent = `Invalid username or password. ${remainingAttempts} attempt(s) remaining.`;
+                    document.getElementById('username').disabled = false;
+                    document.getElementById('password').disabled = false;
+                    loginBtn.disabled = false;
+                } else {
+                    lockLogin();
+                }
+            }, 800);
+        });
+
+        // 1b. Handle Signup
+        signupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('signupUsername').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value.trim();
+            const confirm = document.getElementById('signupPasswordConfirm').value.trim();
+
+            if (!username || !password || !email) {
+                signupError.textContent = 'Please provide a username, your Gmail, and a password.';
+                return;
+            }
+
+            // Require a Gmail address for password recovery
+            if (!email.toLowerCase().endsWith('@gmail.com')) {
+                signupError.textContent = 'Please provide a valid Gmail address (example@gmail.com).';
+                return;
+            }
+
+            if (password !== confirm) {
+                signupError.textContent = 'Passwords do not match.';
+                return;
+            }
+
+            if (isStaffUsername(username)) {
+                signupError.textContent = 'That username is reserved.';
+                return;
+            }
+
+            const users = loadUsers();
+            const key = username.toLowerCase();
+            if (users[key]) {
+                signupError.textContent = 'That username is already taken.';
+                return;
+            }
+
+            users[key] = {
+                password,
+                email: email.toLowerCase(),
+                role: 'student',
+                createdAt: new Date().toISOString(),
+                lastLoginAt: new Date().toISOString(),
+                lastGeo: null,
+            };
+            saveUsers(users);
+
+            signupError.textContent = '';
+            alert('Account created! You can now sign in.');
+            showLoginScreen();
+        });
+
+        showSignupBtn.addEventListener('click', showSignupScreen);
+        showLoginBtn.addEventListener('click', showLoginScreen);
+        forgotPasswordBtn.addEventListener('click', showResetScreen);
+        cancelResetBtn.addEventListener('click', showLoginScreen);
+
+        resetForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            resetError.textContent = '';
+            resetInfo.textContent = '';
+
+            const username = document.getElementById('resetUsername').value.trim();
+            const email = document.getElementById('resetEmail').value.trim().toLowerCase();
+            const password = document.getElementById('resetPassword').value.trim();
+            const confirm = document.getElementById('resetPasswordConfirm').value.trim();
+
+            if (!username || !email || !password) {
+                resetError.textContent = 'Please provide your username, Gmail, and new password.';
+                return;
+            }
+
+            if (password !== confirm) {
+                resetError.textContent = 'Passwords do not match.';
+                return;
+            }
+
+            const users = loadUsers();
+            const key = username.toLowerCase();
+            const account = users[key];
+
+            if (!account) {
+                resetError.textContent = 'No account found with that username.';
+                return;
+            }
+
+            // If an email is already stored, it must match; otherwise, store the provided Gmail.
+            if (account.email && account.email.toLowerCase() !== email) {
+                resetError.textContent = 'The Gmail address does not match our records.';
+                return;
+            }
+
+            account.email = email;
+            account.password = password;
+            users[key] = account;
+            saveUsers(users);
+
+            // Simulate an emailed reset link (for local demo purposes)
+            const token = Math.random().toString(36).slice(2, 10);
+            const resetLink = `${window.location.origin}${window.location.pathname}?reset=${encodeURIComponent(token)}&user=${encodeURIComponent(username)}`;
+
+            resetInfo.innerHTML = `Password reset successful!<br><strong>Simulated reset link (click to return to sign in):</strong><br><a href="#" onclick="showLoginScreen();document.getElementById('username').value='${username}';document.getElementById('password').focus(); return false;">${resetLink}</a>`;
+        });
+
+
+        // 2. Show Report Form
+        function showReportForm() {
+            transitionTo(() => {
+                document.body.classList.remove('login-bg');
+                setActiveScreen(reportScreen);
+            }, 'Preparing report form…');
+        }
+
+        function updateLogTabButtons() {
+            const isStaff = currentRole === 'staff';
+            document.getElementById('tabPending').style.display = 'inline-block';
+            document.getElementById('tabTakingAction').style.display = isStaff ? 'inline-block' : 'none';
+            document.getElementById('tabFinished').style.display = isStaff ? 'inline-block' : 'none';
+        }
+
+        function setStaffFilter(value) {
+            staffFilterStudentId = value.trim().toLowerCase();
+            refreshCabinet();
+            showLogs();
+        }
+
+        function refreshCabinet() {
+            const reports = loadReports();
+            const search = cabinetSearchQuery.trim().toLowerCase();
+            const studentFilter = staffFilterStudentId.trim().toLowerCase();
+            const counts = { pending: 0, taking_action: 0, finished: 0 };
+
+            reports.forEach((r) => {
+                const matchesStudent = !studentFilter || r.studentId.toLowerCase().includes(studentFilter);
+                const matchesSearch = !search || [r.studentId, r.createdBy, r.details]
+                    .filter(Boolean)
+                    .some((v) => v.toLowerCase().includes(search));
+
+                if (!matchesStudent || !matchesSearch) return;
+                if (counts[r.status] !== undefined) {
+                    counts[r.status] += 1;
+                }
+            });
+
+            document.getElementById('cabinetPendingCount').textContent = counts.pending;
+            document.getElementById('cabinetActionCount').textContent = counts.taking_action;
+            document.getElementById('cabinetFinishedCount').textContent = counts.finished;
+        }
+
+        function getSelectedReportIds() {
+            return Array.from(document.querySelectorAll('#logsList input[data-report-id]:checked')).map((el) => el.dataset.reportId);
+        }
+
+        function updateBulkSelectionUI() {
+            const ids = getSelectedReportIds();
+            const bar = document.getElementById('bulkActionsBar');
+            const count = document.getElementById('bulkSelectedCount');
+
+            if (!bar || !count) return;
+
+            if (ids.length === 0) {
+                bar.classList.add('hidden');
+                return;
+            }
+
+            count.textContent = `${ids.length}`;
+            bar.classList.remove('hidden');
+        }
+
+        function clearBulkSelection() {
+            document.querySelectorAll('#logsList input[data-report-id]').forEach((input) => {
+                input.checked = false;
+            });
+            updateBulkSelectionUI();
+        }
+
+        function bulkChangeStatus(status) {
+            const ids = getSelectedReportIds();
+            if (!ids.length) return;
+
+            const reports = loadReports();
+            let changed = false;
+
+            reports.forEach((r) => {
+                if (ids.includes(r.id)) {
+                    r.status = status;
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                saveReports(reports);
+            }
+
+            showLogs();
+        }
+
+        function bulkDeleteSelected() {
+            const ids = getSelectedReportIds();
+            if (!ids.length) return;
+
+            if (!confirm('Delete selected reports? This cannot be undone.')) return;
+
+            const reports = loadReports().filter((r) => !ids.includes(r.id));
+            saveReports(reports);
+            showLogs();
+        }
+
+        function renderUserCard(account, username) {
+            const createdAt = account.createdAt ? new Date(account.createdAt).toLocaleString() : 'Unknown';
+            const lastLoginAt = account.lastLoginAt ? new Date(account.lastLoginAt).toLocaleString() : 'Never';
+
+            const geo = account.lastGeo;
+            const geoHtml = geo
+                ? `<div style="margin-top: 0.5rem; font-size: 0.9rem; color: #333;">
+                        <strong>Last GeoIP:</strong><br>
+                        ${geo.city ? `${geo.city}, ` : ''}${geo.region ? `${geo.region}, ` : ''}${geo.country || ''}<br>
+                        IP: ${geo.ip || 'Unknown'}${geo.org ? `<br>Org: ${geo.org}` : ''}
+                   </div>`
+                : '<div style="margin-top: 0.5rem; font-size: 0.9rem; color: #555;">GeoIP not available</div>';
+
+            const avatarHtml = account.avatar
+                ? `<img src="${account.avatar}" alt="Avatar" style="width: 40px; height: 40px; border-radius: 999px; object-fit: cover;">`
+                : `<div style="width: 40px; height: 40px; border-radius: 999px; background: rgba(15, 23, 42, 0.07); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; color: rgba(0,0,0,0.45);">${username[0]?.toUpperCase() || '?'}</div>`;
+
+            const isStaff = account.role === 'staff';
+            const actionHtml = isStaff
+                ? `<div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--muted);">Built-in staff account</div>`
+                : `<div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button type="button" style="flex: 1;" onclick="deleteUser('${username}')">Delete</button>
+                   </div>`;
+
+            return `
+                <div class="report-card" style="padding: 1rem 1rem 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                        ${avatarHtml}
+                        <div>
+                            <div style="font-weight: 700;">${username}</div>
+                            <div style="font-size: 0.85rem; color: var(--muted);">${account.role || 'student'}</div>
+                        </div>
+                    </div>
+                    <div><strong>Email:</strong> ${account.email || '—'}</div>
+                    <div><strong>Created:</strong> ${createdAt}</div>
+                    <div><strong>Last login:</strong> ${lastLoginAt}</div>
+                    ${geoHtml}
+                    ${actionHtml}
+                </div>
+            `;
+        }
+
+        function renderAccounts() {
+            const list = document.getElementById('accountsList');
+            if (!list) return;
+
+            const search = document.getElementById('accountsSearch')?.value.trim().toLowerCase() || '';
+            const roleFilter = document.getElementById('accountsRoleFilter')?.value || '';
+
+            const users = loadUsers();
+            const merged = { ...users };
+
+            Object.keys(STAFF_CREDENTIALS).forEach((staffUsername) => {
+                merged[staffUsername] = {
+                    role: 'staff',
+                    email: '',
+                    createdAt: '—',
+                    lastLoginAt: '—',
+                    lastGeo: null,
+                };
+            });
+
+            const entries = Object.entries(merged).filter(([username, account]) => {
+                const matchesRole = !roleFilter || (account.role === roleFilter);
+                const matchesSearch = !search || [username, account.email, account.role]
+                    .filter(Boolean)
+                    .some((val) => val.toLowerCase().includes(search));
+                return matchesRole && matchesSearch;
+            });
+
+            if (entries.length === 0) {
+                list.innerHTML = '<p>No accounts found.</p>';
+                return;
+            }
+
+            list.innerHTML = entries
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .map(([username, account]) => renderUserCard(account, username))
+                .join('');
+        }
+
+        function showAccounts() {
+            transitionTo(() => {
+                setActiveScreen(accountsScreen);
+                renderAccounts();
+            }, 'Loading accounts…');
+        }
+
+        function deleteUser(username) {
+            if (isStaffUsername(username)) {
+                alert('Staff accounts cannot be deleted.');
+                return;
+            }
+
+            if (!confirm(`Delete account "${username}"? This cannot be undone.`)) return;
+            const users = loadUsers();
+            delete users[username.toLowerCase()];
+            saveUsers(users);
+            renderAccounts();
+        }
+
+        function setLogsTab(tab) {
+            // Students can only view pending reports.
+            if (currentRole !== 'staff') {
+                tab = 'pending';
+            }
+
+            currentLogTab = tab;
+            updateLogTabButtons();
+
+            document.getElementById('tabPending').classList.toggle('active', tab === 'pending');
+            document.getElementById('tabTakingAction').classList.toggle('active', tab === 'taking_action');
+            document.getElementById('tabFinished').classList.toggle('active', tab === 'finished');
+
+            showLogs();
+        }
+
+        function showLogs() {
+            transitionTo(() => {
+                setActiveScreen(logsScreen);
+                clearBulkSelection();
+
+                const logsCount = document.getElementById('logsCount');
+                const logsList = document.getElementById('logsList');
+                const reports = loadReports();
+
+                const search = cabinetSearchQuery.trim().toLowerCase();
+
+                const filtered = reports.filter((r) => {
+                    const statusMatches = r.status === currentLogTab;
+                    const ownerMatches = currentRole === 'staff' ? true : r.createdBy === currentUser;
+                    const studentMatch = staffFilterStudentId
+                        ? r.studentId.toLowerCase().includes(staffFilterStudentId)
+                        : true;
+
+                    const searchMatch = search
+                        ? [r.studentId, r.createdBy, r.details]
+                            .filter(Boolean)
+                            .some((value) => value.toLowerCase().includes(search))
+                        : true;
+
+                    return statusMatches && ownerMatches && studentMatch && searchMatch;
+                });
+
+                if (filtered.length === 0) {
+                    logsCount.textContent = '';
+                    logsList.innerHTML = '<p>No reports in this section.</p>';
+                    logsScreen.classList.remove('hidden');
+                    return;
+                }
+
+                logsCount.textContent = `${filtered.length} report(s) in "${currentLogTab.replace('_', ' ')}"`;
+
+                logsList.innerHTML = filtered
+                    .slice()
+                    .reverse()
+                    .map(renderReportCard)
+                    .join('');
+
+                updateBulkSelectionUI();
+                logsScreen.classList.remove('hidden');
+            }, 'Loading logs…');
+        }
+
+        function setReportStatus(id, status) {
+            const reports = loadReports();
+            const report = reports.find((r) => r.id === id);
+            if (!report) return;
+
+            report.status = status;
+            saveReports(reports);
+            showLogs();
+        }
+
+        function deleteReport(id) {
+            if (!confirm('Delete this report? This cannot be undone.')) return;
+
+            const reports = loadReports().filter((r) => r.id !== id);
+            saveReports(reports);
+            showLogs();
+        }
+
+        // 3. Back to Dashboard
+        function showDashboard() {
+            transitionTo(() => {
+                document.body.classList.remove('login-bg');
+                setActiveScreen(dashboardScreen);
+
+                // Reset the default logs tab selection without reopening the logs view
+                currentLogTab = 'pending';
+                updateLogTabButtons();
+
+                updateDashboardForRole();
+            }, 'Loading dashboard…');
+        }
+
+        function showMyReports() {
+            transitionTo(() => {
+                setActiveScreen(myReportsScreen);
+
+                // Students only see their pending reports in this view.
+                const reports = loadReports().filter(r => r.createdBy === currentUser && r.status === 'pending');
+
+                if (reports.length === 0) {
+                    myReportsCount.textContent = '';
+                    myReportsList.innerHTML = '<p>No pending reports found.</p>';
+                    myReportsScreen.classList.remove('hidden');
+                    return;
+                }
+
+                myReportsCount.textContent = `${reports.length} report(s) pending`;
+                myReportsList.innerHTML = reports
+                    .slice()
+                    .reverse()
+                    .map(renderReportCard)
+                    .join('');
+
+                myReportsScreen.classList.remove('hidden');
+            }, 'Loading your reports…');
+        }
+
+        function populateSettings() {
+            const usernameEl = document.getElementById('settingsUsername');
+            const roleEl = document.getElementById('settingsRole');
+            const emailEl = document.getElementById('settingsEmail');
+            const currentPwEl = document.getElementById('settingsCurrentPassword');
+            const newPwEl = document.getElementById('settingsNewPassword');
+            const themeEl = document.getElementById('settingsTheme');
+            const avatarEl = document.getElementById('settingsAvatar');
+            const avatarFileEl = document.getElementById('settingsAvatarFile');
+            const statusEl = document.getElementById('settingsStatus');
+            const errorEl = document.getElementById('settingsError');
+
+            statusEl.textContent = '';
+            errorEl.textContent = '';
+            currentPwEl.value = '';
+            newPwEl.value = '';
+            avatarFileEl.value = '';
+
+            if (!currentUser) return;
+
+            usernameEl.value = currentUser;
+            roleEl.value = currentRole || 'student';
+
+            const users = loadUsers();
+            const account = users[currentUser.toLowerCase()];
+
+            emailEl.value = account && account.email ? account.email : '';
+
+            const storedTheme = localStorage.getItem('incidentTheme');
+            themeEl.value = storedTheme || 'system';
+
+            // Render profile photo if stored
+            if (account && account.avatar) {
+                avatarEl.innerHTML = `<img src="${account.avatar}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">`;
+            } else {
+                avatarEl.innerHTML = '<span style="font-size: 0.85rem; color: rgba(0,0,0,0.45);">No Photo</span>';
+            }
+        }
+
+        function showSettings() {
+            transitionTo(() => {
+                document.body.classList.remove('login-bg');
+                setActiveScreen(settingsScreen);
+                populateSettings();
+            }, 'Opening settings…');
+        }
+
+        function deleteAccount() {
+            if (!currentUser) return;
+            if (!confirm('Delete your account? This cannot be undone.')) return;
+
+            const users = loadUsers();
+            delete users[currentUser.toLowerCase()];
+            saveUsers(users);
+            clearRememberedUsername();
+
+            alert('Your account has been deleted. You will be returned to the sign in screen.');
+            logout();
+        }
+
+        function clearAvatar() {
+            if (!currentUser) return;
+
+            const users = loadUsers();
+            const account = users[currentUser.toLowerCase()];
+            if (!account) return;
+
+            delete account.avatar;
+            users[currentUser.toLowerCase()] = account;
+            saveUsers(users);
+
+            populateSettings();
+        }
+
+        settingsForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const statusEl = document.getElementById('settingsStatus');
+            const errorEl = document.getElementById('settingsError');
+            const email = document.getElementById('settingsEmail').value.trim().toLowerCase();
+            const currentPw = document.getElementById('settingsCurrentPassword').value;
+            const newPw = document.getElementById('settingsNewPassword').value;
+            const theme = document.getElementById('settingsTheme').value;
+            const avatarFile = document.getElementById('settingsAvatarFile').files[0];
+
+            statusEl.textContent = '';
+            errorEl.textContent = '';
+
+            const isStaff = currentRole === 'staff';
+
+            // Theme updates do not require password checks.
+            if (theme === 'system') {
+                localStorage.removeItem('incidentTheme');
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                applyTheme(prefersDark ? 'dark' : 'light');
+            } else {
+                localStorage.setItem('incidentTheme', theme);
+                applyTheme(theme);
+            }
+
+            // If staff user, only theme update is supported.
+            if (isStaff) {
+                statusEl.textContent = 'Theme updated.';
+                return;
+            }
+
+            const users = loadUsers();
+            const key = currentUser ? currentUser.toLowerCase() : null;
+            const account = key ? users[key] : null;
+
+            if (!account) {
+                errorEl.textContent = 'Unable to locate your account. Please log out and back in.';
+                return;
+            }
+
+            const wantsEmailUpdate = email && email !== (account.email || '');
+            const wantsPasswordUpdate = newPw.trim().length > 0;
+            const wantsAvatarUpdate = Boolean(avatarFile);
+
+            if ((wantsEmailUpdate || wantsPasswordUpdate || wantsAvatarUpdate) && !currentPw) {
+                errorEl.textContent = 'Enter your current password to make changes.';
+                return;
+            }
+
+            if (currentPw && account.password !== currentPw) {
+                errorEl.textContent = 'Current password is incorrect.';
+                return;
+            }
+
+            if (wantsEmailUpdate) {
+                if (!email.endsWith('@gmail.com')) {
+                    errorEl.textContent = 'Please use a valid Gmail address (example@gmail.com).';
+                    return;
+                }
+                account.email = email;
+            }
+
+            if (wantsPasswordUpdate) {
+                account.password = newPw;
+            }
+
+            if (wantsAvatarUpdate) {
+                try {
+                    const dataUrl = await readFileAsDataUrl(avatarFile);
+                    account.avatar = dataUrl;
+                } catch (err) {
+                    errorEl.textContent = 'Unable to load image. Please try another file.';
+                    return;
+                }
+            }
+
+            users[key] = account;
+            saveUsers(users);
+
+            statusEl.textContent = 'Profile settings saved.';
+            document.getElementById('settingsCurrentPassword').value = '';
+            document.getElementById('settingsNewPassword').value = '';
+            document.getElementById('settingsAvatarFile').value = '';
+
+            populateSettings();
+
+            setTimeout(() => {
+                statusEl.textContent = '';
+            }, 3500);
+        });
+
+        // 4. Logout
+        function logout() {
+            document.body.classList.add('login-bg');
+            remainingAttempts = 3;
+            document.getElementById('username').disabled = false;
+            document.getElementById('password').disabled = false;
+            loginForm.querySelector('button[type="submit"]').disabled = false;
+            loginError.textContent = '';
+            showLoginScreen();
+        }
+
+        // 5. Handle Report Submission
+        function readFileAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('Unable to read file'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        reportForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const photoInput = document.getElementById('reportPhoto');
+            const files = photoInput.files ? Array.from(photoInput.files) : [];
+
+            const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+            const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+            if (totalSize > MAX_TOTAL_SIZE) {
+                alert('Total photo size exceeds 50MB. Please select fewer or smaller images.');
+                return;
+            }
+
+            const photoData = await Promise.all(
+                files.map(async (file) => {
+                    const data = await readFileAsDataUrl(file);
+                    return { name: file.name, data };
+                })
+            );
+
+            const geoInfo = await fetchGeoInfo();
+
+            const report = {
+                id: Date.now().toString(),
+                createdBy: currentUser || 'Unknown',
+                createdAt: new Date().toISOString(),
+                date: document.getElementById('reportDate').value,
+                time: document.getElementById('reportTime').value,
+                studentId: document.getElementById('studentId').value.trim(),
+                details: document.getElementById('incidentDetails').value.trim(),
+                photos: photoData,
+                status: 'pending',
+                geo: geoInfo,
+            };
+
+            const reports = loadReports();
+            reports.push(report);
+            saveReports(reports);
+
+            alert('Report Submitted Successfully!');
+            reportForm.reset();
+            showDashboard();
+        });
+
+        // Initialize the view on page load
+        initTheme();
+        showLoginScreen();
+    </script>
+
+    <!-- Transfer / transition overlay -->
+    <div id="transferOverlay" class="transfer-overlay" aria-hidden="true">
+        <div class="transfer-content">
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="transfer-text">Switching screens…</div>
+        </div>
+    </div>
+
+</body>
+</html>
